@@ -19,3 +19,6 @@ local.properties
 # OS
 Thumbs.db
 ehthumbs.db
+/.idea/.name
+/.idea/compiler.xml
+/.kotlin/sessions/kotlin-compiler-226174434394642379.salive
