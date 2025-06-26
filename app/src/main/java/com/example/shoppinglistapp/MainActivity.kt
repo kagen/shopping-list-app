@@ -1,4 +1,4 @@
-package com.example.shoppinglistapp // ←あなたのパッケージ名
+package com.example.shoppinglistapp
 
 import kotlinx.coroutines.delay
 import androidx.compose.ui.draw.shadow
@@ -10,6 +10,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.ui.unit.sp
 
 
 import android.os.Bundle
@@ -27,6 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.example.shoppinglistapp.data.Product
 
 class MainActivity : ComponentActivity() {
@@ -165,12 +174,20 @@ fun ProductGrid(products: List<Product>) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 fun ProductItem(product: Product) {
     val context = LocalContext.current
     var isChecked by remember { mutableStateOf(product.isChecked) }
     var showMemo by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    var editedMemo by remember { mutableStateOf(product.memo ?: "") }
+    var editedQuantity by remember { mutableStateOf(product.quantity.toString()) }
+    var editedChecked by remember { mutableStateOf(product.isChecked) }
+
+    val quantityOptions = (1..9).map { it.toString() }
+    var quantityDropdownExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(showMemo) {
         if (showMemo) {
@@ -182,17 +199,18 @@ fun ProductItem(product: Product) {
     val gestureModifier = Modifier
         .combinedClickable(
             onClick = {
-                // 🟡 シングルタップ：メモ表示（Box内に表示）
                 if (!product.memo.isNullOrBlank()) {
                     showMemo = true
                 }
             },
             onDoubleClick = {
-                // ✅ ダブルタップ：買い物完了（チェック）
                 isChecked = !isChecked
             },
             onLongClick = {
-                // ✏️ 長押し：あとでダイアログを追加予定
+                editedMemo = product.memo ?: ""
+                editedQuantity = product.quantity.toString()
+                editedChecked = product.isChecked
+                showEditDialog = true
             }
         )
 
@@ -203,27 +221,51 @@ fun ProductItem(product: Product) {
             .fillMaxSize()
             .then(gestureModifier)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .shadow(4.dp, shape = RoundedCornerShape(12.dp))
+                .border(1.dp, Color.Gray, shape = RoundedCornerShape(12.dp))
+                .background(Color.White, shape = RoundedCornerShape(12.dp))
+        ) {
             Column(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.align(Alignment.Center)
             ) {
                 Text(
                     text = product.icon ?: product.name.take(1),
-                    style = MaterialTheme.typography.headlineMedium
+                    style = MaterialTheme.typography.headlineMedium,
+                    textAlign = TextAlign.Center,
+                    color = Color.Black,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Text(
                     text = product.name,
-                    style = MaterialTheme.typography.bodySmall)
+                    style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    color = Color.Black,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
-            if (product.quantity > 1) {
+            if (!product.memo.isNullOrBlank()) {
                 Text(
-                    text = "🔴${product.quantity}",
-                    style = MaterialTheme.typography.labelSmall,
+                    text = "🔴",
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(4.dp)
+                )
+            } else if (product.quantity > 1) {
+                Text(
+                    text = "x${product.quantity}",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(4.dp),
+                    color = Color.Black
                 )
             }
 
@@ -242,23 +284,95 @@ fun ProductItem(product: Product) {
                     text = product.memo ?: "",
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .background(
-                            color = Color(0xFF323232), // ← 背景色変更（例: 濃いグレー）
-                            shape = RoundedCornerShape(12.dp) // ← 角を丸くする
-                        )
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp)) // ← 枠線追加（任意）
-                        .padding(horizontal = 12.dp, vertical = 6.dp) // ← 内側の余白調整
-                        .shadow(4.dp), // ← ドロップシャドウ（任意）
-                    color = Color.White, // 文字色
+                        .background(Color.Black.copy(alpha = 0.8f))
+                        .padding(8.dp),
+                    color = Color.White,
                     style = MaterialTheme.typography.labelMedium,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    textAlign = TextAlign.Center
                 )
             }
-
         }
     }
-}
 
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = {
+                Text(
+                    text = "商品を編集",
+                    style = MaterialTheme.typography.labelMedium.copy(fontSize = 14.sp)
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "商品名: ${product.name}",
+                        style = MaterialTheme.typography.headlineLarge
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = editedChecked,
+                            onCheckedChange = { editedChecked = it }
+                        )
+                        Text("買い物完了")
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = editedMemo,
+                        onValueChange = { editedMemo = it },
+                        label = { Text("メモ") },
+                        modifier = Modifier.height(200.dp)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    ExposedDropdownMenuBox(
+                        expanded = quantityDropdownExpanded,
+                        onExpandedChange = { quantityDropdownExpanded = !quantityDropdownExpanded },
+                    ) {
+                        OutlinedTextField(
+                            value = editedQuantity,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("数量") },
+                            trailingIcon = {
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                            },
+                            modifier = Modifier.menuAnchor()
+                        )
+                        DropdownMenu(
+                            expanded = quantityDropdownExpanded,
+                            onDismissRequest = { quantityDropdownExpanded = false },
+                        ) {
+                            quantityOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        editedQuantity = option
+                                        quantityDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    product.memo = editedMemo
+                    product.quantity = editedQuantity.toIntOrNull() ?: 1
+                    product.isChecked = editedChecked
+                    isChecked = editedChecked
+                    showEditDialog = false
+                }) {
+                    Text("保存")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) {
+                    Text("キャンセル")
+                }
+            }
+        )
+    }
+}
 

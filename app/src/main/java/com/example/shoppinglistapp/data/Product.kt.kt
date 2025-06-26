@@ -2,8 +2,8 @@ package com.example.shoppinglistapp.data
 
 data class Product(
     val name: String,
-    val icon: String? = null,
-    val quantity: Int = 1,
-    val memo: String? = null,
-    val isChecked: Boolean = false
+    var icon: String? = null,
+    var quantity: Int = 1,
+    var memo: String? = null,
+    var isChecked: Boolean = false
 )
