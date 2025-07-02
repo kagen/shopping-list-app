@@ -1,19 +1,14 @@
-package com.example.shoppinglistapp.ui.dialog
-
 import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.shoppinglistapp.data.Product
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,8 +91,7 @@ fun ProductAddDialog(
                     value = basePrice,
                     onValueChange = { basePrice = it },
                     label = { Text("基準価額") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
                 Text("グループ登録（複数可）")
