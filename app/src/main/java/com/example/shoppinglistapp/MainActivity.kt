@@ -1,4 +1,5 @@
 package com.example.shoppinglistapp
+import com.example.shoppinglistapp.ui.MainScreen
 
 import kotlinx.coroutines.delay
 import androidx.compose.ui.draw.shadow
@@ -44,6 +45,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ShoppingListAppTheme {
                 val navController = rememberNavController()
+                MainScreen(navController = navController)
                 AppNavHost(navController)
             }
         }
